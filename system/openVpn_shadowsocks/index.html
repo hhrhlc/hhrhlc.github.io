@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Mailx_send - Xuan</title>
+        <title>OpenVpn_shadowsocks - Xuan</title>
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
@@ -57,12 +57,12 @@
     <a href="../linux_disk_inode/">Linux_disk_inode</a>
 </li>
                                     
-<li class="active">
-    <a href="./">Mailx_send</a>
+<li >
+    <a href="../mailx_send/">Mailx_send</a>
 </li>
                                     
-<li >
-    <a href="../openVpn_shadowsocks/">OpenVpn_shadowsocks</a>
+<li class="active">
+    <a href="./">OpenVpn_shadowsocks</a>
 </li>
                                 </ul>
                             </li>
@@ -115,17 +115,17 @@
                             </a>
                         </li>
                             <li >
-                                <a rel="next" href="../linux_disk_inode/">
+                                <a rel="next" href="../mailx_send/">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
                             <li >
-                                <a rel="prev" href="../openVpn_shadowsocks/">
+                                <a rel="prev" href="../../python/pyenv/">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
                             <li>
-                                <a href="https://github.com/hhrhlc/edit/master/docs/system/mailx_send.md"><i class="fa fa-github"></i> Edit on GitHub</a>
+                                <a href="https://github.com/hhrhlc/edit/master/docs/system/openVpn_shadowsocks.md"><i class="fa fa-github"></i> Edit on GitHub</a>
                             </li>
                     </ul>
                 </div>
@@ -135,54 +135,209 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#mailx_send">Mailx_send</a></li>
+        <li class="main active"><a href="#openvpn_shadowsocks">OpenVpn_shadowsocks</a></li>
+            <li><a href="#path">Path</a></li>
             <li><a href="#installation">Installation</a></li>
-            <li><a href="#configure">Configure</a></li>
-            <li><a href="#send-mail">Send Mail</a></li>
-            <li><a href="#problem">Problem</a></li>
-            <li><a href="#solution">Solution</a></li>
+            <li><a href="#configurg-openvpn-server">Configurg OpenVpn Server</a></li>
+            <li><a href="#configure-certificates">Configure Certificates</a></li>
+            <li><a href="#generate-certificates">Generate Certificates</a></li>
+            <li><a href="#configure-firewalld">Configure Firewalld</a></li>
+            <li><a href="#started-openvpn-server">Started OpenVpn Server</a></li>
+            <li><a href="#create-user">Create User</a></li>
+            <li><a href="#client">Client</a></li>
+        <li class="main "><a href="#shadowsocks">Shadowsocks</a></li>
+            <li><a href="#server">server</a></li>
+            <li><a href="#client_1">client</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="mailx_send">Mailx_send</h1>
-<h3 id="installation">Installation</h3>
-<pre><code class="BASH">$ yum -y install mailx
-$ systemclt stop postfix
+<h1 id="openvpn_shadowsocks">OpenVpn_shadowsocks</h1>
+<h4 id="path">Path</h4>
+<ul>
+<li>CentOS : 7.4</li>
+<li>OpenVpn: 2.4.6(yum)</li>
+</ul>
+<h4 id="installation">Installation</h4>
+<pre><code class="BASH">$ yum -y install lz4-devel net-tools lzo-devel pam-devel openssl-devel
+$ yum -y install openvpn easy-rsa
 </code></pre>
 
-<h3 id="configure">Configure</h3>
-<pre><code class="BASH">$ vim /etc/mail.rc
+<h4 id="configurg-openvpn-server">Configurg OpenVpn Server</h4>
+<pre><code class="BASH">$ cp /usr/share/doc/openvpn-2.4.6/sample/sample-config-files/server.conf /etc/openvpn/
+$ vim /etc/openvpn/server.conf
 
-# 163
-set from=&quot;github@163.com&quot;
-set smtp=smtp.163.com
-set smtp-auth-user=github
-set smtp-auth-password=password
-set smpt-auth=login   
+port  1194
+proto udp
+dev   tun
 
-# qq
-#set from=123456@qq.com
-#set smtp=smtp.exmail.qq.com
-#set smtp-auth-user=123456
-#set smtp-auth-password=password
-#set smtp-auth=login
+ca       /etc/openvpn/easy-rsa/3.0/pki/ca.crt
+cert     /etc/openvpn/easy-rsa/3.0/pki/issued/server.crt
+key      /etc/openvpn/easy-rsa/3.0/pki/private/server.key
+dh       /etc/openvpn/easy-rsa/3.0/pki/dh.pem
+tls-auth /etc/openvpn/ta.key 0
+
+server 10.8.0.0 255.255.255.0
+ifconfig-pool-persist ipp.txt
+
+push &quot;dhcp-option DNS 114.114.114.114&quot;
+push &quot;dhcp-option DNS 208.67.222.222&quot;
+push &quot;dhcp-option DNS 208.67.220.220&quot;
+
+keepalive 10 120
+
+cipher AES-256-CBC
+comp-lzo
+max-clients 100
+
+user  openvpn
+group openvpn
+
+persist-key
+persist-tun
+
+status      /tmp/openvpn-status.log
+log-append  /tmp/openvpn.log
+
+verb 3
+mute 20
+explicit-exit-notify 1
 </code></pre>
 
-<h3 id="send-mail">Send Mail</h3>
-<pre><code class="BASH">$ echo &quot;邮件内容&quot; | mailx -s &quot;邮件标题&quot; aaa@xxx.com
+<h4 id="configure-certificates">Configure Certificates</h4>
+<pre><code class="BASH">$ cp -R /usr/share/easy-rsa /etc/openvpn/
+$ vim /etc/openvpn/easy-rsa/3.0/vars
+
+# 45 65 76 84-89 97 105 113 117 134 139 171 180 192
+set_var EASYRSA                 &quot;$PWD&quot;
+set_var EASYRSA_PKI             &quot;$EASYRSA/pki&quot;
+set_var EASYRSA_DN              &quot;cn_only&quot;
+set_var EASYRSA_REQ_COUNTRY     &quot;CN&quot;
+set_var EASYRSA_REQ_PROVINCE    &quot;SiChuan&quot;
+set_var EASYRSA_REQ_CITY        &quot;ChengDu&quot;
+set_var EASYRSA_REQ_ORG         &quot;server&quot;
+set_var EASYRSA_REQ_EMAIL       &quot;server@server.net&quot;
+set_var EASYRSA_REQ_OU          &quot;server&quot;
+set_var EASYRSA_KEY_SIZE        2048
+set_var EASYRSA_ALGO            rsa
+set_var EASYRSA_CA_EXPIRE       3650
+set_var EASYRSA_CERT_EXPIRE     3650
+set_var EASYRSA_NS_SUPPORT      &quot;no&quot;
+set_var EASYRSA_NS_COMMENT      &quot;Easy-RSA Generated Certificate&quot;
+set_var EASYRSA_EXT_DIR         &quot;$EASYRSA/x509-types&quot;
+set_var EASYRSA_SSL_CONF        &quot;$EASYRSA/openssl-1.0.cnf&quot;
+set_var EASYRSA_DIGEST          &quot;sha256&quot;
 </code></pre>
 
-<h3 id="problem">Problem</h3>
-<pre><code class="BASH">$ echo &quot;content&quot; | mailx -s &quot;title&quot; 123456789@qq.com
-$ smtp-server: 553 Mail from must equal authorized user
-&quot;/root/dead.letter&quot; 11/294
-. . . message not sent.
+<h4 id="generate-certificates">Generate Certificates</h4>
+<pre><code class="BASH">$ cd /etc/openvpn/easy-rsa/3.0
+$ ./easyrsa init-pki
+$ ./easyrsa build-ca
+
+Enter PEM pass phrase: PASSWORD
+Verifying - Enter PEM pass phrase: PASSWORD
+
+Common Name (eg: your user, host, or server name) [Easy-RSA CA]:
 </code></pre>
 
-<h3 id="solution">Solution</h3>
-<p><code>163</code>: <code>设置</code> -&gt; <code>POP3/SMTP/IMAP</code> -&gt; <code>客户端授权密码</code></p>
-<p><code>qq</code> : <code>设置</code> -&gt; <code>账号</code> -&gt; <code>POP3/IMAP/SMTP/Exchange/CardDAV/CalDAV服务</code> -&gt; <code>开启</code></p></div>
+<pre><code class="BASH">$ cd /etc/openvpn/easy-rsa/3.0
+$ ./easyrsa gen-dh
+$ openvpn --genkey --secret ta.key
+$ cp -r ta.key /etc/openvpn/
+$ ./easyrsa gen-req server
+
+Enter PEM pass phrase: PASSWORD
+Verifying - Enter PEM pass phrase: PASSWORD
+
+Common Name (eg: your user, host, or server name) [server]:
+</code></pre>
+
+<pre><code class="BASH">$ ./easyrsa sign-req server server
+
+Confirm request details: `yes`
+
+Enter pass phrase for /etc/openvpn/easy-rsa/3.0/pki/private/ca.key: PASSWORD
+</code></pre>
+
+<h4 id="configure-firewalld">Configure Firewalld</h4>
+<pre><code class="BASH">$ vim /etc/sysctl.conf
+net.ipv4.ip_forward = 1
+
+$ sysctl -p
+
+$ firewall-cmd --state
+$ firewall-cmd --zone=public --list-all
+$ firewall-cmd --add-service=openvpn --permanent
+$ firewall-cmd --add-port=1194/udp --permanent
+$ firewall-cmd --add-source=10.8.0.0 --permanent
+$ firewall-cmd --query-source=10.8.0.0 --permanent
+$ firewall-cmd --add-masquerade --permanent
+$ firewall-cmd --query-masquerade --permanent
+$ firewall-cmd --reload
+</code></pre>
+
+<h4 id="started-openvpn-server">Started OpenVpn Server</h4>
+<pre><code>openvpn --config /etc/openvpn/server.conf --daemon --askpass
+Enter Private Key Password: PASSWORD
+</code></pre>
+
+<h4 id="create-user">Create User</h4>
+<pre><code class="BASH">$ cd /etc/openvpn/easy-rsa/3.0
+$ ./easyrsa build-client-full client_001
+
+Enter PEM pass phrase: CLIENT_001_PASSWORD
+Verifying - Enter PEM pass phrase: CLIENT_001_PASSWORD
+Enter pass phrase for /etc/openvpn/easy-rsa/3.0/pki/private/ca.key: PASSWORD
+</code></pre>
+
+<h4 id="client">Client</h4>
+<p><code>https://openvpn.net/index.php/open-source/downloads.html</code></p>
+<pre><code class="BASH"># /etc/openvpn/easy-rsa/3.0/pki/issued/client_001.crt
+# /etc/openvpn/easy-rsa/3.0/pki/private/client_002.key
+# /etc/openvpn/easy-rsa/3.0/pki/ca.crt
+# /etc/openvpn/ta.key
+
+$ vim client_001.ovpn
+
+client
+remote `REMOTE IPADDRESS` 1194
+
+dev   tun
+proto udp
+
+ca    ca.crt
+cert  client_001.crt
+key   client_001.key
+
+persist-key
+persist-tun
+
+tls-auth  ta.key 1
+keepalive 10     120
+
+resolv-retry infinite
+ns-cert-type server
+
+nobind
+comp-lzo
+verb 5
+redirect-gateway
+route-method exe
+route-delay  2
+status     user_001-status.log
+log-append user_001.log
+</code></pre>
+
+<h1 id="shadowsocks">Shadowsocks</h1>
+<h4 id="server">server</h4>
+<ul>
+<li><code>https://github.com/v2ray/v2ray-core</code></li>
+<li><code>https://intmainreturn0.com/v2ray-config-gen</code></li>
+</ul>
+<h4 id="client_1">client</h4>
+<ul>
+<li><code>https://github.com/shadowsocks</code></li>
+</ul></div>
         </div>
 
         <footer class="col-md-12">
