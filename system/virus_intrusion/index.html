@@ -151,16 +151,16 @@
 <h1 id="virus_intrusion">Virus_intrusion</h1>
 <h4 id="problem">Problem</h4>
 <p><code>CPU 100%</code></p>
-<p><img alt="Description" src="https://github.com/hhrhlc/picture/blob/master/virus_intrusion_001.png" /></p>
+<p><img alt="Description" src="https://github.com/hhrhlc/picture/raw/master/virus_intrusion_001.png" /></p>
 <p><code>KILL</code>之后又启动了</p>
-<p><img alt="Crontab" src="https://github.com/hhrhlc/picture/blob/master/virus_intrusion_003.png" /></p>
+<p><img alt="Crontab" src="https://github.com/hhrhlc/picture/raw/master/virus_intrusion_003.png" /></p>
 <h4 id="analysis">Analysis</h4>
 <p>打开请求的地址, 用<code>base64</code>解码发现是SHELL脚本, 简单的过了下脚本发现</p>
 <ul>
 <li>覆盖计划任务</li>
 <li>添加三个执行文件</li>
 </ul>
-<p><img alt="Shell" src="https://github.com/hhrhlc/picture/blob/master/virus_intrusion_002.jpg" /></p>
+<p><img alt="Shell" src="https://github.com/hhrhlc/picture/raw/master/virus_intrusion_002.jpg" /></p>
 <h4 id="solution">Solution</h4>
 <p>1: KILL掉服务
 <code>ps auxf|grep -v grep|grep "watchbog" | awk '{print $2}'|xargs kill -9</code></p>
